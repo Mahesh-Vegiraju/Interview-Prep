@@ -1,91 +1,70 @@
 import math
 
-def _hash(key, size):
-    return hash(key) % size
+def hashs(key,length):
+  return hash(key) % length
 
-class LinkedListNode:
-    def __init__(self, key, data):
-        self.data = data
+# array that indices to linked lists
+#   becuase of the linked list we need a node class
+# needs to be able to deal with adding and updating values in the hashmap
+#   the node has to have some way to determine whether or not to update node or add to the end of the linked list
+#       thus the node has to contain the key for the value
+#       obviously it needs to contain the value to be able to get the value
+# the hashmap should dynammically resize to a new size when the hashmap starts to get full
+#   lets say that full = 70% of the indices in the array have a non NULL value
+#   resize to double the current array length
+
+class Node():
+    def __init__(self, key, value) -> None:
+        self.value = value
         self.key = key
         self.next = None
 
-    def print(self):
-        if self.key:
-            head = self
-            while True:
-                print(f"[{head.key}, {head.data}]", end='')
-                if head.next is not None:
-                    print(" --> ", end='')
-                    head = head.next
-                else:
-                    print()
-                    return
-
-        
-class HashTable:
-    def __init__(self):
+class HashMap():
+    def __init__(self) -> None:
         self.table = [None] * 10
-        
-    def rehash(self, new_table):
-        size = len(new_table)
-        for linked_list in self.table:
-            if linked_list is not None:
-                head = linked_list
-                while True:
-                    new_table[_hash(head.key, size)] = head
-                    if head.next is not None:
-                        head = head.next
-                    else:
-                        break
-        
-        self.table = new_table
-        return
-    
-    def resize(self):
-        null_count = self.table.count(None)
-        if len(self.table) - null_count == math.floor(len(self.table)*0.8):
-            new_table = [None] * (2 * len(self.table))
-            self.rehash(new_table)
-        return
-    
-    def insert(self, key, data):
-        hashed = _hash(key, len(self.table))
-        if self.table[hashed] is not None:
-            head = self.table[hashed]
-            while True:
-                if head.next is not None and head.key != key:
-                    head = head.next
-                elif head.key == key:
-                    head.data = data
-                    break
-                else:
-                    head.next = LinkedListNode(key, data)
-                    break
-        else:
-            self.table[hashed] = LinkedListNode(key, data)
-            
-        self.resize()
-        return
-            
-    def read(self, key):
-        hashed = _hash(key, len(self.table))
-        if self.table[hashed] is None:
-            raise Exception("key not found")
-        else:
-            head = self.table[hashed]
-            while True:
-                if head.next is not None and head.key != key:
-                    head = head.next
-                elif head.key == key:
-                    return head.data
-                else:
-                    raise Exception("key not found")
-        return
+        self.length = 10
 
-    def print(self):
-        for i in range(len(self.table)):
-            print(f'index [{i}]: ', end='')
-            if self.table[i] is not None:
-                self.table[i].print()
+    def _resize(self) -> None:
+        self.length = self.length * 2
+        new_table = [None] * (self.length)
+        for i in self.table:
+            current = i
+            while True:
+                if current is None:
+                    break
+                new_table[hashs(current.key, self.length)] = Node(current.key, current.value)
+                current = current.next
+        self.table = new_table
+
+    def add(self, key, value) -> None:
+        hash = hashs(key, self.length)
+        if self.table[hash] is None:  # means that there is no collison
+            self.table[hash] = Node(key, value)
+        else:  # collison, thus check if key already exists in hash and update otherwise add to the end of the linked lsit
+            current = self.table[hash]
+            while True:
+                if current.key == key:  # update the value since key is the same
+                    current.value = value
+                    break
+                if current.next is not None:  # keep going through the linked list
+                    current = current.next
+                else:
+                    current.next = Node(key, value)  # adds the key,value to the linked list
+                    break
+        if self.table.count(None) <= self.length * 0.3:
+            self._resize()
+
+        
+    
+    def read(self, key) -> None:
+        hash = hashs(key, self.length)
+        if self.table[hash] is None:  # key not in hashmap
+            raise Exception('Key not found in hashmap')
+        current = self.table[hash]
+        while True:
+            if current.key == key:
+                return current.value
+            if current.next is not None:
+                current = current.next
             else:
-                print()
+                raise Exception('Key not found in hashmap')

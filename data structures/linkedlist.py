@@ -1,76 +1,95 @@
-class Node:
+# contain data at every node
+# want to be able to find some data
+# want to be able to add data to the start, somewhere in the middle and the end of the linkedlist
+# want to be able to delete any node
+# want to be able to update data at any node
+class Node():
   def __init__(self, value) -> None:
-    self.value = value
     self.next = None
+    self.value = value
 
-class LinkedList:
+class LinkedList():
   def __init__(self) -> None:
     self.head = None
-    self.size = 0
-
-  def push(self, value) -> None:
+    self.length = 0
+  
+  def append(self, value) -> None:  # add data to the end of the linked list
     if self.head is None:
       self.head = Node(value)
-
+      self.length += 1
+      return
+    
+    current = self.head
+    while True:
+      if current.next is None:
+        current.next = Node(value)
+        self.length += 1
+        return
+      current = current.next
+  
+  def to_front(self, value) -> None:  # add data to the front of the linked list
+    if self.head is not None:
+      old_head = self.head
+      self.head = Node(value)
+      self.head.next = old_head
+      self.length += 1
     else:
-      head = self.head
-      for i in range(self.size):
-        if head.next is not None:
-          head = head.next
-      head.next = Node(value)
-    self.size += 1
-    return
-  
-  def get_node_at_index(self, index) -> Node:
-    if self.head is None:
-      raise Exception("LinkedList is empty")
-    elif index > self.size - 1:
-      raise Exception("Index is out of bounds")
-    
-    head = self.head
-    for i in range(index):
-      head = head.next
-    return head
-  
-  def get(self, index):
-    return self.get_node_at_index(self, index).value
-  
-  def find(self, value) -> int:
-    if self.head is None:
-      return -1
-    
-    head = self.head
-    for i in range(self.size):
-      if head is not None and head.value == value:
-        return i
-      elif head.next is not None:
-        head = head.next
+      self.append(value)
 
-    return -1
+  def add(self, value, index) -> None:  # add data to linked list at index pos
+    if index > self.length - 1:
+      raise Exception("index out of bounds")
+    
+    current = self.head
+    for i in range(index - 1):
+      current = current.next
+    
+    
+    old_next = current.next
+    new = Node(value)
+    current.next = new
+    new.next = old_next
+    self.length += 1
 
-  
-  def modify(self, index, new_value) -> None:
-    node = self.get_node_at_index(self, index)
-    node.value = new_value
-    return
-  
-  def delete(self, index) -> None:
+  def del_front(self) -> None:
+    if self.head is not None:
+      self.head = self.head.next
+      self.length -= 1
+    else:
+      raise Exception("Linked list is empty")
+    
+  def del_tail(self) -> None:
+    if self.head is not None:
+      current = self.head
+      old = None
+      while True:
+        if current.next is not None:
+          old = current
+          current = current.next
+        else:
+          old.next = None
+          self.length -= 1
+          return
+    
+  def del_node(self, index) -> None:
+    if index > self.length - 1:
+      raise Exception("index out of bounds")
     if self.head is None:
-      raise Exception("LinkedList is empty")
-    elif index > self.size - 1:
-      raise Exception("Index is out of bounds")
+      raise Exception("Linked list is empty")
+    current = self.head
+    for i in range(index - 1):
+      current = current.next
     
-    head = self.head
-    prev = None
+    next = current.next
+    current.next = next
+    # self.length -= 1
+
+  def read(self, index) -> None:
+    if index > self.length - 1:
+      raise Exception("index out of bounds")
+    
+    current = self.head
     for i in range(index):
-      prev = head
-      head = head.next
+      current = current.next
     
-    if i == self.size:
-      prev.next = None
-      head = None
-    elif i < self.size:
-      prev.next = head.next
-      head = None
-      
-    return
+    return current.value
